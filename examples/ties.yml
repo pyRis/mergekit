@@ -7,7 +7,7 @@ models:
     parameters:
       density: 0.5
       weight: [0, 0.3, 0.7, 1] # weight gradient
-  - model: WizardLM/WizardMath-13B-V1.0
+  - model: WizardLMTeam/WizardLM-13B-V1.0
     parameters:
       density: 0.33
       weight:
