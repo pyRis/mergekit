@@ -1,0 +1,42 @@
+# Example configuration for mergekit-evolve with custom qu-du-tasks evaluation
+# This is a minimal configuration - tasks are automatically included
+
+genome:
+  models:
+    - "microsoft/DialoGPT-small"
+    - "microsoft/DialoGPT-medium"
+  merge_method: dare_ties
+  base_model: "microsoft/DialoGPT-small"
+  layer_granularity: 8
+  
+  # Optional parameters:
+  normalize: false
+  allow_negative_weights: false
+  smooth: false
+
+# Tasks are now optional! If not specified, all supported qu-du-tasks will be used
+# with equal weights. Supported tasks:
+# - Query expansion: gov2, trec_robust, trec_covid, fire, query2doc, trec_cast, trec_web
+# - Query reformulation: codec, qrecc, canard, trec_cast, gecor  
+# - Fact verification: fever, climate_fever, scifact
+# - Summarization: cnndm, xsum, wikisum, multinews
+
+# Uncomment and customize if you want to specify specific tasks and weights:
+# tasks:
+#   - name: query_expansion_gov2
+#     weight: 1.0
+#     metric: "ROUGE-L"
+#   - name: fact_verification_fever
+#     weight: 2.0
+#     metric: "Acc"
+#   - name: summarization_cnndm
+#     weight: 1.5
+#     metric: "ROUGE-L"
+
+# Other optional parameters:
+limit: null  # Set to limit number of samples per task (default: 20 in custom evaluation)
+num_fewshot: null  # Not used in custom evaluation
+shuffle: false  # Not used in custom evaluation
+random_init: false
+apply_chat_template: true  # Not used in custom evaluation
+fewshot_as_multiturn: true  # Not used in custom evaluation

@@ -22,14 +22,71 @@ class TaskConfiguration(BaseModel, frozen=True):
 
 
 class EvolMergeConfiguration(BaseModel, frozen=True):
+    """
+    Configuration for evolutionary model merging.
+    
+    For custom qu-du-tasks evaluation, the 'tasks' field is optional.
+    If not specified, all supported tasks will be used with equal weights.
+    Supported tasks include:
+    - Query expansion (gov2, trec_robust, trec_covid, fire, query2doc, trec_cast, trec_web)
+    - Query reformulation (codec, qrecc, canard, trec_cast, gecor)
+    - Fact verification (fever, climate_fever, scifact)
+    - Summarization (cnndm, xsum, wikisum, multinews)
+    
+    Example minimal configuration:
+    ```yaml
+    genome:
+      models:
+        - model_1
+        - model_2
+      merge_method: dare_ties
+      base_model: base_model_if_needed
+    # tasks: # Optional - if omitted, all supported tasks will be used
+    ```
+    """
     genome: ModelGenomeDefinition
-    tasks: List[TaskConfiguration]
+    tasks: Optional[List[TaskConfiguration]] = None
     limit: Optional[int] = None
     num_fewshot: Optional[int] = None
     shuffle: bool = False
     random_init: bool = False
     apply_chat_template: bool = True
     fewshot_as_multiturn: bool = True
+
+    @model_validator(mode="after")
+    def set_default_tasks(self):
+        if self.tasks is None:
+            # Use predefined tasks for custom qu-du-tasks evaluation
+            default_tasks = [
+                # Query expansion tasks
+                TaskConfiguration(name="query_expansion_gov2", weight=1.0, metric="ROUGE-L"),
+                TaskConfiguration(name="query_expansion_trec_robust", weight=1.0, metric="ROUGE-L"),
+                TaskConfiguration(name="query_expansion_trec_covid", weight=1.0, metric="ROUGE-L"),
+                TaskConfiguration(name="query_expansion_fire", weight=1.0, metric="ROUGE-L"),
+                TaskConfiguration(name="query_expansion_query2doc", weight=1.0, metric="ROUGE-L"),
+                TaskConfiguration(name="query_expansion_trec_cast", weight=1.0, metric="ROUGE-L"),
+                TaskConfiguration(name="query_expansion_trec_web", weight=1.0, metric="ROUGE-L"),
+                
+                # Query reformulation tasks
+                TaskConfiguration(name="query_reformulation_codec", weight=1.0, metric="ROUGE-L"),
+                TaskConfiguration(name="query_reformulation_qrecc", weight=1.0, metric="ROUGE-L"),
+                TaskConfiguration(name="query_reformulation_canard", weight=1.0, metric="ROUGE-L"),
+                TaskConfiguration(name="query_reformulation_trec_cast", weight=1.0, metric="ROUGE-L"),
+                TaskConfiguration(name="query_reformulation_gecor", weight=1.0, metric="ROUGE-L"),
+                
+                # Fact verification tasks
+                TaskConfiguration(name="fact_verification_fever", weight=1.0, metric="Acc"),
+                TaskConfiguration(name="fact_verification_climate_fever", weight=1.0, metric="Acc"),
+                TaskConfiguration(name="fact_verification_scifact", weight=1.0, metric="Acc"),
+                
+                # Summarization tasks
+                TaskConfiguration(name="summarization_cnndm", weight=1.0, metric="ROUGE-L"),
+                TaskConfiguration(name="summarization_xsum", weight=1.0, metric="ROUGE-L"),
+                TaskConfiguration(name="summarization_wikisum", weight=1.0, metric="ROUGE-L"),
+                TaskConfiguration(name="summarization_multinews", weight=1.0, metric="ROUGE-L"),
+            ]
+            object.__setattr__(self, 'tasks', default_tasks)
+        return self
 
 
 NAUGHTY_PREFIXES = [

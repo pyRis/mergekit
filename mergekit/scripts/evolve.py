@@ -153,6 +153,11 @@ def main(
 
     logging.info("Using custom qu-du-tasks evaluation system instead of lm_eval")
     logging.info("Each task will be limited to 20 samples for faster evaluation")
+    logging.info("Tasks configuration is optional - if not specified, all supported tasks will be used with equal weights")
+    if config.tasks is None:
+        logging.info("No tasks specified in config - using default task set with all supported qu-du-tasks")
+    else:
+        logging.info(f"Using {len(config.tasks)} tasks specified in configuration")
 
     check_for_naughty_config(config, allow=allow_benchmark_tasks)
 
