@@ -6,10 +6,6 @@ import logging
 import tempfile
 from typing import Optional, Union
 
-import lm_eval
-import lm_eval.api.model
-import lm_eval.models.huggingface
-import lm_eval.tasks
 import ray
 import ray.util.queue
 import ray.util.scheduling_strategies
@@ -33,8 +29,6 @@ from mergekit.evo.genome import InvalidGenotypeError, ModelGenome
 from mergekit.evo.helpers import _eval_model, evaluate_model, merge_model
 from mergekit.evo.monkeypatch import (
     NoInit,
-    monkeypatch_lmeval_shuffle,
-    monkeypatch_lmeval_vllm,
 )
 from mergekit.graph import Executor
 from mergekit.io.tasks import LoaderCache, ReturnTensor
@@ -54,7 +48,7 @@ class MergeActorBase:
         model_storage_path: Optional[str] = None,
         vllm: bool = False,
         batch_size: Optional[int] = None,
-        task_manager: Optional[lm_eval.tasks.TaskManager] = None,
+        task_manager: Optional[any] = None,
         quantization_config: Optional[transformers.BitsAndBytesConfig] = None,
     ):
         self.config = config
@@ -68,11 +62,7 @@ class MergeActorBase:
         self.task_manager = task_manager
         self.quantization_config = quantization_config
 
-        if config.shuffle:
-            monkeypatch_lmeval_shuffle()
-
-        # monkeypatch_tqdm()
-        monkeypatch_lmeval_vllm()
+        # Note: shuffle and monkeypatch functionality removed as we're using custom evaluation
 
 
 @ray.remote(num_cpus=1, num_gpus=1.0)
@@ -129,13 +119,10 @@ class InMemoryMergeEvaluator(MergeActorBase):
     This reduces overhead from disk I/O and model loading, but prevents
     parallelism and may be slower for large models.
 
-    Implementation is dark sorcery tampering with the internals of lm-eval,
-    transformers, and vLLM and may break at any time.
+    Note: This class is currently disabled due to custom evaluation system.
     """
 
-    model: Union[
-        lm_eval.models.huggingface.HFLM, lm_eval.models.vllm_causallms.VLLM, None
-    ] = None
+    model: Optional[any] = None
     arch_info: Optional[ConfiguredModelArchitecture] = None
 
     def __init__(
@@ -144,7 +131,8 @@ class InMemoryMergeEvaluator(MergeActorBase):
         vllm: bool = False,
         **kwargs,
     ):
-        # assert not vllm, "VLLM is not supported for in-memory merging"
+        # Note: InMemoryMergeEvaluator is not supported with custom evaluation
+        raise NotImplementedError("InMemoryMergeEvaluator is not supported with custom qu-du-tasks evaluation. Use OnDiskMergeEvaluator instead.")
         super().__init__(*args, vllm=vllm, **kwargs)
 
     def _maybe_init_model(self, config: MergeConfiguration):

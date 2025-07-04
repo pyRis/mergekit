@@ -7,7 +7,6 @@ import os
 from abc import ABC, abstractmethod
 from typing import Dict, List, Optional, Tuple, Union
 
-import lm_eval.tasks
 import numpy as np
 import ray
 import ray.util.queue
@@ -42,7 +41,7 @@ class EvaluationStrategyBase(ABC):
             self.merge_options.device
         )
         self.batch_size = batch_size
-        self.task_manager = lm_eval.tasks.TaskManager(include_path=task_search_path)
+        self.task_manager = None  # Not used with custom evaluation
         self.model_storage_path = model_storage_path
         self.quantization_config = quantization_config
         if self.model_storage_path:
@@ -113,7 +112,7 @@ class BufferedRayEvaluationStrategyActor:
         vllm: bool = False,
         num_gpus: Optional[int] = None,
         batch_size: Optional[int] = None,
-        task_manager: Optional[lm_eval.tasks.TaskManager] = None,
+        task_manager: Optional[any] = None,
         model_storage_path: Optional[str] = None,
         quantization_config: Optional[transformers.BitsAndBytesConfig] = None,
     ):
@@ -248,7 +247,7 @@ def evaluate_genotype_serial(
     model_storage_path: Optional[str] = None,
     vllm: bool = False,
     batch_size: Optional[int] = None,
-    task_manager: Optional[lm_eval.tasks.TaskManager] = None,
+    task_manager: Optional[any] = None,
     quantization_config: Optional[transformers.BitsAndBytesConfig] = None,
 ):
     pg = ray.util.placement_group([{"CPU": 1, "GPU": 1}], strategy="STRICT_PACK")

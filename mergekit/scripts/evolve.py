@@ -42,7 +42,7 @@ from mergekit.options import MergeOptions
 @click.command("mergekit-evolve")
 @click.argument("genome-config-path", type=str)
 @click.option("--max-fevals", type=int, default=100)
-@click.option("--vllm/--no-vllm", is_flag=True, default=False, help="Use vLLM")
+@click.option("--vllm/--no-vllm", is_flag=True, default=False, help="[IGNORED] Use vLLM (not used with custom evaluation)")
 @click.option(
     "--strategy",
     "-s",
@@ -54,7 +54,7 @@ from mergekit.options import MergeOptions
     "--in-memory/--no-in-memory",
     is_flag=True,
     default=False,
-    help="Use in-memory merge & evaluation",
+    help="[DISABLED] Use in-memory merge & evaluation (not supported with custom evaluation)",
 )
 @click.option(
     "--storage-path",
@@ -76,7 +76,7 @@ from mergekit.options import MergeOptions
     "--task-search-path",
     type=str,
     multiple=True,
-    help="Path to search for lmeval tasks",
+    help="[IGNORED] Path to search for lmeval tasks (not used with custom evaluation)",
 )
 @click.option(
     "--i-understand-the-depths-of-the-evils-i-am-unleashing",
@@ -151,10 +151,22 @@ def main(
         yaml.safe_load(open(genome_config_path, "r", encoding="utf-8"))
     )
 
+    logging.info("Using custom qu-du-tasks evaluation system instead of lm_eval")
+    logging.info("Each task will be limited to 20 samples for faster evaluation")
+
     check_for_naughty_config(config, allow=allow_benchmark_tasks)
 
     if load_in_4bit and load_in_8bit:
         raise ValueError("Cannot load models in both 4-bit and 8-bit")
+
+    if in_memory:
+        raise ValueError("In-memory evaluation is not supported with custom qu-du-tasks evaluation. Use --no-in-memory instead.")
+
+    if vllm:
+        logging.warning("vLLM option is ignored when using custom qu-du-tasks evaluation system")
+
+    if task_search_path:
+        logging.warning("task-search-path option is ignored when using custom qu-du-tasks evaluation system")
 
     if load_in_4bit or load_in_8bit:
         if vllm:
